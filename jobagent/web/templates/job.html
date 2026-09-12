@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+{% set job = entry.job %}
+{% block title %}{{ job.title }} — {{ job.company }}{% endblock %}
+{% block subtitle %}{{ job.company }}{% endblock %}
+
+{% block content %}
+<div class="panel">
+  <div class="row" style="justify-content: space-between; align-items: flex-start;">
+    <div>
+      <div style="font-size: 19px; font-weight: 650;">{{ job.title }}</div>
+      <div class="muted small" style="margin-top: 3px;">
+        {{ job.company }}{% if job.location %} · {{ job.location }}{% endif %}
+        {% if job.remote %} · remote{% endif %} · via {{ job.source }}
+        {% if job.age_days is not none %} · posted {{ job.age_days }}d ago{% endif %}
+      </div>
+      <div class="row" style="margin-top: 12px;">
+        <a class="apply-link" href="{{ job.best_link }}" target="_blank" rel="noopener">
+          Apply on the employer's site ↗
+        </a>
+        {% if job.apply_url and job.url != job.apply_url %}
+        <a class="small" href="{{ job.url }}" target="_blank" rel="noopener">view the listing</a>
+        {% endif %}
+      </div>
+    </div>
+    <div style="text-align: right;">
+      <span class="score {% if entry.score >= 75 %}s-high{% elif entry.score >= 60 %}s-mid{% else %}s-low{% endif %}"
+            style="width: 54px; height: 54px; font-size: 18px;">{{ entry.score }}</span>
+      {% if entry.status %}
+      <div><span class="badge b-{{ entry.status }}" style="margin-top: 8px;">{{ status_labels.get(entry.status, entry.status) }}</span></div>
+      {% endif %}
+    </div>
+  </div>
+  {% if entry.notes %}<div class="notice" style="margin-top: 12px; margin-bottom: 0;">{{ entry.notes }}</div>{% endif %}
+</div>
+
+<div class="grid">
+  <div>
+    <div class="panel">
+      <h2>Job description</h2>
+      <div class="jd">
+        {%- if job.description -%}
+          {{ job.description }}
+        {%- else -%}
+          No description has been captured for this posting yet. A live search
+          reads the listing pages only, to stay fast; the full text is filled in
+          by the background crawl. Open the listing to read it now.
+        {%- endif -%}
+      </div>
+    </div>
+  </div>
+
+  <div>
+    <div class="panel">
+      <h2>Why this score</h2>
+      {% for key, value in entry.result.detail.items() %}
+      <div style="margin-bottom: 8px;">
+        <div class="row" style="justify-content: space-between;">
+          <span class="small">{{ key }}</span><span class="small muted">{{ value }}</span>
+        </div>
+        <div class="bar"><i style="width: {{ (value / 55 * 100) if key == 'skills' else (value / 15 * 100) }}%;"></i></div>
+      </div>
+      {% endfor %}
+      {% if entry.result.rejected_reason %}
+        <div class="small" style="color: var(--amber);">Filtered: {{ entry.result.rejected_reason }}</div>
+      {% endif %}
+
+      <hr class="sep"/>
+      <div class="small muted" style="margin-bottom: 4px;">Skills you match</div>
+      <div class="tags">
+        {% for skill in entry.result.matched_skills %}<span class="tag">{{ skill }}</span>{% endfor %}
+        {% if not entry.result.matched_skills %}<span class="small muted">none detected</span>{% endif %}
+      </div>
+      <div class="small muted" style="margin: 10px 0 4px;">The JD also asks for</div>
+      <div class="tags">
+        {% for skill in entry.result.missing_skills %}<span class="tag miss">{{ skill }}</span>{% endfor %}
+        {% if not entry.result.missing_skills %}<span class="small muted">nothing you're missing</span>{% endif %}
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2>Track it <span class="sub">after you apply yourself</span></h2>
+      <form method="post" action="/jobs/{{ job.id }}/status" class="row">
+        <select name="status" style="width:auto">
+          {% for status in statuses %}
+            <option value="{{ status }}" {% if entry.status == status %}selected{% endif %}>
+              {{ status_labels.get(status, status) }}
+            </option>
+          {% endfor %}
+        </select>
+        <input type="text" name="notes" placeholder="note (optional)" style="flex: 1;"/>
+        <button type="submit">Save</button>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

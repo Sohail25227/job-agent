@@ -1,0 +1,183 @@
+{% extends "base.html" %}
+{% block title %}Results · job-agent{% endblock %}
+{% block subtitle %}
+  {{ total }} openings{% if active_search %} for {{ active_search.role }}{% endif %}
+{% endblock %}
+
+{% block content %}
+{% if limit_hit %}
+<div class="notice bad">
+  You have used today's live searches. The results below are still the full
+  cache, and it keeps filling in the background — your allowance resets tomorrow.
+</div>
+{% elif live and task and task.busy %}
+<div class="notice info">
+  Searching every source right now. Results appear as they land; this page
+  refreshes itself, so there is no need to click again.
+</div>
+{% endif %}
+
+<form class="panel" method="get" action="/jobs">
+  <div class="row">
+    <label class="field" style="flex:2; min-width:180px">
+      Search
+      <input type="text" name="q" value="{{ filters.q }}" placeholder="title or company"/>
+    </label>
+    <label class="field" style="width:160px">
+      City
+      <input type="text" name="city" value="{{ filters.city }}" placeholder="e.g. Gurgaon"
+             list="city-options"/>
+    </label>
+    <datalist id="city-options">
+      {% for value in city_options %}<option value="{{ value }}"></option>{% endfor %}
+    </datalist>
+    <label class="field" style="width:180px">
+      Saved search
+      <select name="search_id">
+        {% for search in searches %}
+        <option value="{{ search.id }}" {{ 'selected' if filters.search_id == search.id else '' }}>
+          {{ search.role }} · {{ search.location_label }}
+        </option>
+        {% endfor %}
+      </select>
+    </label>
+    <label class="field" style="width:150px">
+      Status
+      <select name="status">
+        <option value="">Any</option>
+        {% for value in statuses %}
+        <option value="{{ value }}" {{ 'selected' if filters.status == value else '' }}>
+          {{ status_labels[value] }}
+        </option>
+        {% endfor %}
+      </select>
+    </label>
+    <label class="field" style="width:140px">
+      Source
+      <select name="source">
+        <option value="">Every source</option>
+        {% for value in sources %}
+        <option value="{{ value }}" {{ 'selected' if filters.source == value else '' }}>{{ value }}</option>
+        {% endfor %}
+      </select>
+    </label>
+    <label class="field" style="width:110px">
+      Min score
+      <input type="number" name="min_score" value="{{ filters.min_score or '' }}" min="0" max="100"/>
+    </label>
+    <label class="field" style="width:130px">
+      Sort by
+      <select name="sort">
+        <option value="score" {{ 'selected' if filters.sort != 'new' else '' }}>Best match</option>
+        <option value="new" {{ 'selected' if filters.sort == 'new' else '' }}>Newest first</option>
+      </select>
+    </label>
+    <label class="small" style="align-self:end; padding-bottom:8px">
+      <input type="checkbox" name="remote" value="1" {{ 'checked' if filters.remote else '' }}/> remote only
+    </label>
+    <label class="small" style="align-self:end; padding-bottom:8px">
+      <input type="checkbox" name="show_all" value="1" {{ 'checked' if filters.show_all else '' }}/> include filtered out
+    </label>
+    <button class="primary" type="submit" style="align-self:end">Filter</button>
+  </div>
+</form>
+
+{% if active_search %}
+<div class="row tight" style="margin:-4px 0 14px">
+  <form method="post" action="/searches/{{ active_search.id }}/run">
+    <button type="submit" class="primary tiny">Search again, live</button>
+  </form>
+  <span class="tiny muted" style="align-self:center">
+    {% if active_search.last_run_at %}
+      last fetched {{ active_search.last_run_at.strftime('%d %b, %H:%M') }}
+      {% if active_search.last_stats %}
+        · {{ active_search.last_stats.get('new', 0) }} new in
+        {{ active_search.last_stats.get('seconds', 0) }}s
+      {% endif %}
+    {% else %}never fetched{% endif %}
+  </span>
+</div>
+{% endif %}
+
+<div class="panel">
+  <table>
+    <thead>
+      <tr>
+        <th style="width:52px">Fit</th>
+        <th>Role</th>
+        <th style="width:150px">Skills matched</th>
+        <th style="width:110px">Status</th>
+        <th style="width:210px">Action</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for entry in ranked %}
+      <tr>
+        <td>
+          <span class="score {{ 's-high' if entry.score >= 75 else ('s-mid' if entry.score >= 60 else 's-low') }}">
+            {{ entry.score }}
+          </span>
+        </td>
+        <td>
+          <a href="/jobs/{{ entry.job.id }}?search_id={{ filters.search_id }}"><b>{{ entry.job.title }}</b></a>
+          <div class="small muted">
+            {{ entry.job.company }} · {{ entry.job.location or "location not stated" }}
+            {% if entry.job.remote %} · remote{% endif %}
+          </div>
+          <div class="tiny muted">
+            {{ entry.job.source }}{% if entry.job.ats %} ({{ entry.job.ats }}){% endif %}
+            {% if entry.job.age_days is not none %} · posted {{ entry.job.age_days }}d ago{% endif %}
+            {% if entry.result.rejected_reason %} · filtered: {{ entry.result.rejected_reason }}{% endif %}
+          </div>
+        </td>
+        <td>
+          <div class="tags">
+            {% for skill in entry.result.matched_skills[:5] %}
+            <span class="tag">{{ skill }}</span>
+            {% endfor %}
+            {% for skill in entry.result.missing_skills[:2] %}
+            <span class="tag miss">{{ skill }}</span>
+            {% endfor %}
+          </div>
+        </td>
+        <td>
+          {% if entry.status %}
+          <span class="badge b-{{ entry.status }}">{{ status_labels.get(entry.status, entry.status) }}</span>
+          {% else %}
+          <span class="tiny muted">—</span>
+          {% endif %}
+        </td>
+        <td>
+          <div class="row tight">
+            <a class="apply-link tiny" href="{{ entry.job.best_link }}" target="_blank" rel="noopener">Apply ↗</a>
+            <a class="tiny" href="/jobs/{{ entry.job.id }}?search_id={{ filters.search_id }}">details</a>
+          </div>
+        </td>
+      </tr>
+      {% else %}
+      <tr>
+        <td colspan="5" class="muted small" style="padding:22px 10px">
+          {% if task and task.busy %}
+            The search is still running — this page will refresh when it finishes.
+          {% elif not searches %}
+            No searches yet. Create one from the <a href="/">dashboard</a>.
+          {% else %}
+            Nothing matched. Try "Search again, live" above, lower the minimum
+            score, or tick "include filtered out" to see what was rejected and why.
+          {% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+{% if pages > 1 %}
+<div class="row" style="justify-content:center">
+  {% set base = '/jobs?q=' ~ filters.q|urlencode ~ '&city=' ~ filters.city|urlencode ~ '&status=' ~ filters.status ~ '&source=' ~ filters.source ~ '&min_score=' ~ (filters.min_score or '') ~ '&search_id=' ~ filters.search_id ~ '&remote=' ~ (filters.remote or '') ~ '&sort=' ~ filters.sort ~ '&show_all=' ~ (filters.show_all or '') %}
+  {% if page > 1 %}<a href="{{ base }}&page={{ page - 1 }}">← previous</a>{% endif %}
+  <span class="muted small">page {{ page }} of {{ pages }}</span>
+  {% if page < pages %}<a href="{{ base }}&page={{ page + 1 }}">next →</a>{% endif %}
+</div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,96 @@
+# ============================================================================
+# Answers used to fill ATS application forms. Copy to profile.yaml and edit.
+# The form filler matches question text against the keys below, so keep the
+# free-text answers short and reusable.
+# ============================================================================
+
+identity:
+  first_name: Sohaila
+  last_name: Khan
+  full_name: Sohaila Khan
+  email: you@example.com
+  phone: "+91 90000 00000"
+  # Some forms split the country code out.
+  phone_country_code: "+91"
+  phone_national: "9000000000"
+
+location:
+  city: Pune
+  state: Maharashtra
+  country: India
+  country_code: IN
+  postal_code: "411001"
+  address_line: ""
+  # Free text used when a form has a single "Location" box.
+  display: Pune, Maharashtra, India
+
+links:
+  linkedin: https://www.linkedin.com/in/your-handle
+  github: https://github.com/your-handle
+  portfolio: ""
+  website: ""
+
+employment:
+  current_company: Amdocs
+  current_title: Software Engineer
+  total_experience_years: 5
+  relevant_experience_years: 5
+  notice_period_days: 60
+  # Annual, in INR unless you change currency.
+  current_ctc: "1800000"
+  expected_ctc: "2600000"
+  currency: INR
+  earliest_start_date: "2026-10-01"
+
+work_authorization:
+  # Answers to the classic ATS compliance questions.
+  requires_sponsorship: false
+  legally_authorized_india: true
+  legally_authorized_us: false
+  willing_to_relocate: true
+  preferred_work_mode: Hybrid   # Remote | Hybrid | Onsite
+
+demographics:
+  # Voluntary EEO questions. "decline" is always a safe, honest answer.
+  gender: Decline to self identify
+  race: Decline to self identify
+  veteran_status: I don't wish to answer
+  disability_status: I don't wish to answer
+  hispanic_latino: Decline to self identify
+
+sourcing:
+  how_did_you_hear: Company careers page
+  referral_name: ""
+  previously_employed_here: false
+  previously_applied_here: false
+
+# Short reusable paragraphs. The agent picks the closest one when a form asks
+# an open-ended question it can map, and skips (flags for you) when it can't.
+free_text:
+  why_this_company: >
+    I'm looking for a team where backend systems are the product, not a
+    supporting layer. The scale and the engineering culture described in this
+    role line up with the distributed, event-driven services I've been
+    building for the last few years.
+  why_this_role: >
+    My day-to-day is Java, Spring Boot and Kafka-based microservices, with
+    ownership from design through production support. This role's scope maps
+    closely to that, with more room to influence architecture.
+  greatest_strength: >
+    Debugging production behaviour in distributed systems, and turning what I
+    find into changes that stop the class of problem rather than the instance.
+  additional_info: ""
+
+# Anything here is answered verbatim when the question text matches loosely.
+# Add entries as you hit new questions; this is how the agent gets smarter.
+custom_answers:
+  - match: "how many years of experience do you have with java"
+    answer: "5"
+  - match: "how many years of experience do you have with spring"
+    answer: "5"
+  - match: "notice period"
+    answer: "60 days"
+  - match: "are you comfortable working in a hybrid model"
+    answer: "Yes"
+  - match: "have you been referred"
+    answer: "No"

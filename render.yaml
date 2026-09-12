@@ -1,0 +1,51 @@
+# Render blueprint. Create the service from this file rather than by hand, so
+# the settings that matter are in version control.
+#
+#   1. Push this repository to GitHub.
+#   2. Render dashboard -> New -> Blueprint -> pick the repo.
+#   3. Set DATABASE_URL to your Neon connection string (see README).
+#
+# The free web service has no persistent disk, so nothing may be written to the
+# filesystem and expected to survive: the database is external and uploaded
+# resumes are parsed in memory. It also sleeps after 15 minutes of inactivity,
+# which is why the crawl runs from GitHub Actions rather than in this process.
+
+services:
+  - type: web
+    name: job-agent
+    runtime: python
+    plan: free
+    region: singapore          # closest to the India job market this searches
+    buildCommand: pip install -r requirements.txt
+    # One worker: the free instance has a fraction of a CPU, and the background
+    # search threads live inside this process. A second worker would double the
+    # third-party API spend without making anything faster.
+    startCommand: >-
+      uvicorn jobagent.web.app:app --host 0.0.0.0 --port $PORT --workers 1
+    healthCheckPath: /health
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.11"
+      # Signs session cookies. Generated once by Render and then left alone -
+      # changing it logs every user out.
+      - key: SECRET_KEY
+        generateValue: true
+      # Neon (or any managed Postgres) connection string. Free Render Postgres
+      # expires after 30 days, which is why the README points elsewhere.
+      - key: DATABASE_URL
+        sync: false
+      - key: HTTPS_ONLY
+        value: "1"
+      # Live searches spend a third-party quota shared by every account.
+      - key: DAILY_SEARCH_LIMIT
+        value: "25"
+      - key: ADZUNA_APP_ID
+        sync: false
+      - key: ADZUNA_APP_KEY
+        sync: false
+      - key: JOOBLE_API_KEY
+        sync: false
+      # Optional. Without one, resume parsing and role expansion fall back to
+      # built-in logic and everything still works.
+      - key: GEMINI_API_KEY
+        sync: false

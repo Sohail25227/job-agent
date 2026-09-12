@@ -1,0 +1,177 @@
+{% extends "base.html" %}
+{% block title %}Dashboard · job-agent{% endblock %}
+{% block subtitle %}every board, one list, you apply{% endblock %}
+
+{% block content %}
+<div class="chips" style="margin-bottom:16px">
+  <span class="chip"><b>{{ decisions.get('saved', 0) }}</b> shortlisted</span>
+  <span class="chip"><b>{{ decisions.get('applied', 0) }}</b> applied</span>
+  <span class="chip"><b>{{ cached }}</b> openings cached</span>
+  <span class="chip"><b>{{ searches_left }}</b> live searches left today</span>
+</div>
+
+<div class="grid">
+  <div>
+    <form class="panel" method="post" action="/searches">
+      <h2>What are you looking for?</h2>
+      <label class="field" style="margin-bottom:12px">
+        Role
+        <input type="text" id="role" name="role" required
+               placeholder="e.g. Java Backend Engineer" value=""/>
+      </label>
+      <div id="expansion" class="small muted" style="margin:-6px 0 12px; display:none">
+        Also searching as: <span id="titles"></span>
+      </div>
+
+      <div class="tiny muted" style="margin-bottom:5px">Locations — click to select</div>
+      <div class="tags" id="cities" style="margin-bottom:12px">
+        {% for city in cities %}
+        <label class="tag pick">
+          <input type="checkbox" name="locations" value="{{ city }}" hidden
+                 {% if city in ['Gurugram', 'Noida', 'Delhi', 'Bengaluru', 'Pune', 'Hyderabad'] %}checked{% endif %}/>
+          {{ city }}
+        </label>
+        {% endfor %}
+      </div>
+
+      <div class="row" style="margin-bottom:12px">
+        <label class="field" style="width:120px">
+          Min years
+          <input type="number" name="min_experience" value="2" min="0" max="30"/>
+        </label>
+        <label class="field" style="width:120px">
+          Max years
+          <input type="number" name="max_experience" value="6" min="0" max="40"/>
+        </label>
+      </div>
+
+      <div class="row" style="margin-bottom:14px">
+        <label class="small"><input type="checkbox" name="include_remote" checked/> include remote roles</label>
+        <label class="small"><input type="checkbox" name="remote_only"/> remote only</label>
+      </div>
+
+      <button class="primary" type="submit" {{ 'disabled' if not searches_left else '' }}>
+        Search every source now
+      </button>
+      <p class="muted tiny" style="margin-bottom:0">
+        {% if searches_left %}
+        Goes out to every source at once and usually takes 20-40 seconds. The
+        results page shows progress and refreshes itself.
+        {% else %}
+        You have used today's live searches. Existing results stay available and
+        the cache keeps filling in the background.
+        {% endif %}
+      </p>
+    </form>
+  </div>
+
+  <div>
+    <div class="panel">
+      <h2>Your searches</h2>
+      {% for search in searches %}
+      <div style="padding:9px 0; border-bottom:1px solid #21262d">
+        <div class="row" style="justify-content:space-between">
+          <div>
+            <a href="/jobs?search_id={{ search.id }}"><b>{{ search.role }}</b></a>
+            <div class="tiny muted">{{ search.location_label }}</div>
+            {% if search.last_run_at %}
+            <div class="tiny muted">
+              fetched {{ search.last_run_at.strftime('%d %b %H:%M') }}
+              {% if search.last_stats %}
+                · {{ search.last_stats.get('new', 0) }} new in
+                {{ search.last_stats.get('seconds', 0) }}s
+              {% endif %}
+            </div>
+            {% else %}
+            <div class="tiny muted">never fetched</div>
+            {% endif %}
+          </div>
+          <div class="row tight">
+            <form method="post" action="/searches/{{ search.id }}/run">
+              <button type="submit" class="tiny" {{ 'disabled' if not searches_left else '' }}>Search</button>
+            </form>
+            <form method="post" action="/searches/{{ search.id }}/delete">
+              <button type="submit" class="tiny danger">✕</button>
+            </form>
+          </div>
+        </div>
+        {% if search.titles %}
+        <div class="tags">
+          {% for title in search.titles[:6] %}<span class="tag">{{ title }}</span>{% endfor %}
+          {% if search.titles | length > 6 %}
+          <span class="tag">+{{ search.titles | length - 6 }} more</span>
+          {% endif %}
+        </div>
+        {% endif %}
+      </div>
+      {% else %}
+      <p class="muted small">Nothing saved yet. Describe a role on the left to start.</p>
+      {% endfor %}
+    </div>
+
+    <div class="panel">
+      <h2>Recent searches</h2>
+      {% for run in runs %}
+      <div class="small" style="padding:6px 0; border-bottom:1px solid #21262d">
+        <div class="row" style="justify-content:space-between">
+          <span>{{ run.started_at.strftime('%d %b %H:%M') }}</span>
+          <span class="muted tiny">{{ run.stats.get('seconds', 0) if run.stats else 0 }}s</span>
+        </div>
+        {% if run.stats %}
+        <div class="tiny muted">
+          {{ run.stats.get('discovered', 0) }} seen ·
+          {{ run.stats.get('new', 0) }} new ·
+          {{ run.stats.get('sources_ok') | length }} sources answered
+          {% if run.stats.get('timed_out') %} · hit the time limit{% endif %}
+        </div>
+        {% endif %}
+        {% if run.error %}
+        <div class="tiny" style="color:var(--amber)">{{ run.error[:120] }}</div>
+        {% endif %}
+      </div>
+      {% else %}
+      <p class="muted small">No searches yet.</p>
+      {% endfor %}
+    </div>
+
+    <div class="panel">
+      <h2>What this does not do</h2>
+      <p class="small muted" style="margin-bottom:0">
+        It never fills a form, never submits an application and never logs into a
+        job board as you. Every result links to the employer's own page, and you
+        decide what to send.
+      </p>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Reflect checkbox state on the pill, and preview the title family as you type.
+  document.querySelectorAll('#cities .pick').forEach(function (pill) {
+    const box = pill.querySelector('input');
+    const sync = () => pill.classList.toggle('on', box.checked);
+    box.addEventListener('change', sync);
+    sync();
+  });
+
+  const role = document.getElementById('role');
+  const panel = document.getElementById('expansion');
+  const titles = document.getElementById('titles');
+  let timer = null;
+  role.addEventListener('input', function () {
+    clearTimeout(timer);
+    timer = setTimeout(async function () {
+      const value = role.value.trim();
+      if (value.length < 3) { panel.style.display = 'none'; return; }
+      try {
+        const res = await fetch('/api/expand?role=' + encodeURIComponent(value));
+        const data = await res.json();
+        const extra = (data.titles || []).filter(t => t.toLowerCase() !== value.toLowerCase());
+        if (!extra.length) { panel.style.display = 'none'; return; }
+        titles.textContent = extra.slice(0, 8).join(' · ');
+        panel.style.display = 'block';
+      } catch (err) { panel.style.display = 'none'; }
+    }, 350);
+  });
+</script>
+{% endblock %}

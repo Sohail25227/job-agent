@@ -1,0 +1,21 @@
+# Secrets. .env.example is the committed template; .env never is.
+.env
+
+# Local state: the cache, uploaded resumes, generated session key. All of it is
+# recreated on first run, and on a host the database lives elsewhere entirely.
+data/
+!data/.gitkeep
+
+# Personal, not part of the tool. The examples next to them are committed.
+config/profile.yaml
+config/resume_base.yaml
+
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+
+.DS_Store
+*.log

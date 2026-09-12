@@ -1,0 +1,77 @@
+# ============================================================================
+# Your master resume, as structured data. Copy to resume_base.yaml and fill in
+# with your REAL history. The tailoring engine may reorder, reword and
+# re-emphasise what is here, but it is not allowed to invent employers, dates,
+# titles, metrics or skills that do not appear in this file.
+# ============================================================================
+
+name: Sohaila Khan
+headline: Backend Engineer | Java, Spring Boot, Microservices
+contact:
+  email: you@example.com
+  phone: "+91 90000 00000"
+  location: Pune, India
+  linkedin: linkedin.com/in/your-handle
+  github: github.com/your-handle
+
+summary: >
+  Backend engineer with 5 years building event-driven microservices in Java and
+  Spring Boot. Comfortable owning a service end to end: design, Kafka
+  integration, data modelling, CI/CD and production support.
+
+skills:
+  Languages: [Java, Python, SQL, Bash]
+  Frameworks: [Spring Boot, Spring Cloud, JPA/Hibernate, JUnit, Mockito]
+  Messaging: [Kafka, RabbitMQ]
+  Data: [Couchbase, PostgreSQL, Oracle, Redis, MongoDB]
+  Platform: [Docker, Kubernetes, Helm, Jenkins, Maven, Git, GitLab CI]
+  Practices: [Microservices, REST API design, TDD, Code review, Agile/Scrum]
+
+experience:
+  - company: Amdocs
+    title: Software Engineer
+    location: Pune, India
+    start: "2021-07"
+    end: Present
+    tech: [Java, Spring Boot, Kafka, Couchbase, Kubernetes, Helm, Jenkins]
+    bullets:
+      - Built and owned Spring Boot microservices for catalog synchronisation
+        between master and production environments, processing daily
+        high-volume intraday flows.
+      - Designed Kafka producer/consumer flows with idempotent event handling
+        and replay support, cutting reprocessing effort during incidents.
+      - Modelled and tuned Couchbase access patterns and N1QL queries for
+        latency-sensitive read paths.
+      - Automated build and deployment through Jenkins pipelines and Helm
+        charts across multiple environments.
+      - Diagnosed production issues from logs and consumer lag metrics, and
+        drove the fixes through code review to release.
+
+  - company: Previous Company
+    title: Junior Software Engineer
+    location: City, India
+    start: "2019-06"
+    end: "2021-06"
+    tech: [Java, Spring, MySQL, REST]
+    bullets:
+      - Developed REST APIs for internal business workflows with Spring MVC.
+      - Wrote JUnit and integration tests, raising module coverage.
+      - Supported release cycles and fixed defects reported from UAT.
+
+education:
+  - degree: B.Tech, Computer Science
+    institution: Your University
+    location: City, India
+    start: "2015"
+    end: "2019"
+    detail: ""
+
+certifications:
+  - name: ""
+    issuer: ""
+    year: ""
+
+projects:
+  - name: ""
+    detail: ""
+    tech: []

@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}Create your account · job-agent{% endblock %}
+{% block wrapclass %}narrow{% endblock %}
+{% block header %}{% endblock %}
+
+{% block content %}
+<div class="brand" style="margin-bottom:18px">job-agent <span>every board, one list</span></div>
+
+{% if error %}<div class="notice bad">{{ error }}</div>{% endif %}
+
+<form class="panel" method="post" action="/register">
+  <h2>Create your account</h2>
+  <p class="muted small" style="margin-top:-6px">
+    Your password is stored as a scrypt hash, never in plain text. Your resume is
+    read once to score openings and is never shared with an employer or a board.
+  </p>
+  <label class="field" style="margin-bottom:10px">
+    Email
+    <input type="email" name="email" autocomplete="email" autofocus required/>
+  </label>
+  <label class="field" style="margin-bottom:10px">
+    Password <span class="tiny">at least 8 characters</span>
+    <input type="password" name="password" autocomplete="new-password" minlength="8" required/>
+  </label>
+  <label class="field" style="margin-bottom:14px">
+    Confirm password
+    <input type="password" name="confirm" autocomplete="new-password" minlength="8" required/>
+  </label>
+  <button class="primary" type="submit" style="width:100%">Create account</button>
+</form>
+
+<p class="muted tiny">
+  Already have an account? <a href="/login">Log in</a>.
+</p>
+{% endblock %}

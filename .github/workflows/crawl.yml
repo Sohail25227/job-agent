@@ -1,0 +1,63 @@
+# Warms the shared job cache on a schedule.
+#
+# This exists because the free web tier has no background worker and sleeps when
+# idle, so there is nothing there to run a nightly job. GitHub Actions has a
+# cron and generous free minutes, and the crawl only needs the database - it
+# never touches the web service.
+#
+# Every user's searches benefit: the cache is shared, so postings pulled here
+# are already waiting the next time anyone searches.
+
+name: crawl
+
+on:
+  schedule:
+    # 03:00 and 13:00 IST. Twice a day keeps postings fresh without hammering
+    # anyone; cron here is UTC.
+    - cron: "30 21 * * *"
+    - cron: "30 7 * * *"
+  workflow_dispatch:
+    inputs:
+      sources:
+        description: "Space-separated source names, or empty for all"
+        required: false
+        default: ""
+
+concurrency:
+  # Two crawls at once would duplicate every request and race on upserts.
+  group: crawl
+  cancel-in-progress: false
+
+jobs:
+  crawl:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - run: pip install -r requirements.txt
+
+      - name: Crawl every source
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          ADZUNA_APP_ID: ${{ secrets.ADZUNA_APP_ID }}
+          ADZUNA_APP_KEY: ${{ secrets.ADZUNA_APP_KEY }}
+          JOOBLE_API_KEY: ${{ secrets.JOOBLE_API_KEY }}
+        run: |
+          set -o errexit -o pipefail
+          args=""
+          for source in ${{ github.event.inputs.sources }}; do
+            args="$args --source $source"
+          done
+          python -m jobagent.cli crawl $args
+
+      - name: Report the cache size
+        if: always()
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: python -m jobagent.cli stats

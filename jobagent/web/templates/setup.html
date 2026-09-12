@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+{% block title %}Resume · job-agent{% endblock %}
+{% block subtitle %}master resume{% endblock %}
+
+{% block content %}
+{% if error %}<div class="notice bad">{{ error }}</div>{% endif %}
+{% if result %}
+<div class="notice ok">
+  Parsed <b>{{ result.file }}</b> with {{ result.engine }} — {{ result.summary }},
+  {{ result.skills }} skill(s) recognised for matching.
+  {% for warning in result.warnings %}<div class="small">{{ warning }}</div>{% endfor %}
+</div>
+{% endif %}
+
+<div class="grid">
+  <div>
+    <form class="panel" method="post" action="/setup" enctype="multipart/form-data">
+      <h2>Upload your resume <span class="sub">PDF, DOCX, TXT or MD</span></h2>
+      <p class="muted small" style="margin-top:-6px">
+        Your skills and experience are read from this file and used to rank every
+        opening that is found, so the parse being accurate matters more than it
+        being pretty.
+      </p>
+      <div class="row" style="margin-top:12px">
+        <input type="file" name="file" accept=".pdf,.docx,.txt,.md" required style="flex:1"/>
+        <button class="primary" type="submit">Upload and parse</button>
+      </div>
+      <p class="muted tiny" style="margin-bottom:0">
+        A scanned or photographed PDF has no text layer and cannot be read.
+        Export a text PDF from Word or Google Docs instead.
+      </p>
+    </form>
+
+    {% if resume %}
+    <div class="panel">
+      <h2>What was parsed</h2>
+      <dl class="kv">
+        <dt>Name</dt><dd>{{ resume.name or "—" }}</dd>
+        <dt>Headline</dt><dd>{{ resume.headline or "—" }}</dd>
+        <dt>Email</dt><dd>{{ resume.contact.email or "—" }}</dd>
+        <dt>Phone</dt><dd>{{ resume.contact.phone or "—" }}</dd>
+        <dt>Location</dt><dd>{{ resume.contact.location or "—" }}</dd>
+      </dl>
+
+      <hr class="sep"/>
+      <h2>Experience</h2>
+      {% for role in resume.experience or [] %}
+      <div style="margin-bottom:12px">
+        <b>{{ role.title }}</b> · {{ role.company }}
+        <span class="muted small">{{ role.start }} – {{ role.end or "Present" }}</span>
+        <ul class="small muted" style="margin:6px 0 0; padding-left:20px">
+          {% for bullet in role.bullets or [] %}<li>{{ bullet }}</li>{% endfor %}
+        </ul>
+      </div>
+      {% else %}
+      <p class="muted small">No roles were parsed. Check the file and re-upload.</p>
+      {% endfor %}
+
+      <hr class="sep"/>
+      <h2>Skills</h2>
+      {% for category, items in (resume.skills or {}).items() %}
+      <div style="margin-bottom:8px">
+        <div class="tiny muted">{{ category }}</div>
+        <div class="tags">{% for item in items %}<span class="tag">{{ item }}</span>{% endfor %}</div>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+  </div>
+
+  <div>
+    <div class="panel">
+      <h2>What this is used for</h2>
+      <p class="small muted">
+        Every opening found is compared against these skills and years of
+        experience, and scored out of 100. Anything clearly off-target is
+        filtered out so the list stays short enough to actually read.
+      </p>
+      <p class="small muted" style="margin-bottom:0">
+        The file itself is not kept — it is read once, turned into the structure
+        below, and discarded. You apply on the employer's own site, with whatever
+        resume you choose.
+      </p>
+    </div>
+
+    {% if skills %}
+    <div class="panel">
+      <h2>Skills used for matching <span class="sub">{{ skills | length }}</span></h2>
+      <p class="small muted" style="margin-top:-6px">
+        Recognised from your resume. A skill named in a job bullet counts for
+        more than one that only appears in a list.
+      </p>
+      <div class="tags">
+        {% for skill, weight in skills.items() %}
+        <span class="tag" title="weight {{ weight }}">{{ skill }}</span>
+        {% endfor %}
+      </div>
+      <p class="small muted" style="margin:10px 0 0">
+        Something missing or wrong? Re-upload a resume that names it explicitly.
+      </p>
+    </div>
+    {% endif %}
+
+    {% if resume %}
+    <a class="apply-link" href="/">Continue to the dashboard</a>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

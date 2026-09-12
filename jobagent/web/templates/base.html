@@ -1,0 +1,204 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>{% block title %}job-agent{% endblock %}</title>
+  <style>
+    :root {
+      --bg: #0d1117; --panel: #161b22; --panel-2: #1c2128; --line: #30363d;
+      --text: #e6edf3; --muted: #8b949e; --accent: #58a6ff; --green: #3fb950;
+      --amber: #d29922; --red: #f85149; --purple: #bc8cff;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; background: var(--bg); color: var(--text);
+      font: 14px/1.55 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    .wrap { max-width: 1180px; margin: 0 auto; padding: 22px 20px 60px; }
+    .wrap.narrow { max-width: 460px; padding-top: 8vh; }
+    header.top {
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 16px; flex-wrap: wrap; margin-bottom: 18px;
+      padding-bottom: 14px; border-bottom: 1px solid var(--line);
+    }
+    .brand { font-size: 19px; font-weight: 650; letter-spacing: -0.2px; }
+    .brand span { color: var(--muted); font-weight: 400; font-size: 13px; margin-left: 8px; }
+    nav.links { display: flex; gap: 14px; align-items: center; font-size: 13px; }
+    nav.links .who { color: var(--muted); }
+    .chips { display: flex; gap: 8px; flex-wrap: wrap; }
+    .chip {
+      background: var(--panel); border: 1px solid var(--line); border-radius: 999px;
+      padding: 4px 11px; font-size: 12px; color: var(--muted);
+    }
+    .chip b { color: var(--text); }
+    .chip.active { border-color: var(--accent); color: var(--accent); }
+    .panel {
+      background: var(--panel); border: 1px solid var(--line);
+      border-radius: 10px; padding: 16px; margin-bottom: 16px;
+    }
+    .panel h2 { margin: 0 0 12px; font-size: 15px; font-weight: 620; }
+    .panel h2 .sub { color: var(--muted); font-weight: 400; font-size: 12.5px; margin-left: 8px; }
+    .row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+    .row.tight { gap: 6px; }
+    label.field { display: flex; flex-direction: column; gap: 5px; font-size: 12px; color: var(--muted); }
+    input[type=text], input[type=password], input[type=number], input[type=file], select, textarea {
+      background: var(--panel-2); border: 1px solid var(--line); color: var(--text);
+      border-radius: 7px; padding: 7px 10px; font: inherit; font-size: 13px; width: 100%;
+    }
+    input:focus, select:focus, textarea:focus { outline: 1px solid var(--accent); }
+    button {
+      background: var(--panel-2); border: 1px solid var(--line); color: var(--text);
+      border-radius: 7px; padding: 7px 13px; font: inherit; font-size: 13px;
+      cursor: pointer; transition: border-color .15s, background .15s;
+    }
+    button:hover { border-color: var(--accent); }
+    button.primary { background: #1f6feb; border-color: #1f6feb; color: #fff; }
+    button.primary:hover { background: #2a7aff; }
+    button.danger { border-color: #6e2b2b; color: #ff9a92; }
+    button:disabled { opacity: .5; cursor: not-allowed; }
+    .apply-link {
+      display: inline-block; background: #196c2e; border: 1px solid #2ea043; color: #fff;
+      border-radius: 7px; padding: 7px 13px; font-size: 13px; font-weight: 560;
+    }
+    .apply-link:hover { background: #2ea043; text-decoration: none; }
+    table { width: 100%; border-collapse: collapse; }
+    th {
+      text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: .05em;
+      color: var(--muted); font-weight: 600; padding: 8px 10px; border-bottom: 1px solid var(--line);
+    }
+    td { padding: 11px 10px; border-bottom: 1px solid #21262d; vertical-align: top; }
+    tr:hover td { background: #12171e; }
+    .score {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 40px; height: 40px; border-radius: 50%; font-weight: 700; font-size: 14px;
+      border: 2px solid var(--line);
+    }
+    .s-high { border-color: var(--green); color: var(--green); }
+    .s-mid { border-color: var(--amber); color: var(--amber); }
+    .s-low { border-color: var(--line); color: var(--muted); }
+    .badge {
+      display: inline-block; padding: 2px 9px; border-radius: 999px;
+      font-size: 11px; font-weight: 600; white-space: nowrap;
+    }
+    .b-saved { background: #10305c; color: #79c0ff; }
+    .b-scored { background: #2d2145; color: var(--purple); }
+    .b-applied { background: #0f2f1c; color: var(--green); }
+    .b-skipped, .b-new, .b-rejected, .b-closed { background: #21262d; color: var(--muted); }
+    .muted { color: var(--muted); }
+    .small { font-size: 12px; }
+    .tiny { font-size: 11px; }
+    .tags { display: flex; gap: 5px; flex-wrap: wrap; margin-top: 5px; }
+    .tag {
+      background: #1b2430; border: 1px solid #263041; color: #9fb4cc;
+      border-radius: 5px; padding: 1px 6px; font-size: 10.5px;
+    }
+    .tag.miss { background: #2a1f14; border-color: #43301c; color: #d8b384; }
+    .tag.pick {
+      cursor: pointer; user-select: none; background: #1b2430;
+    }
+    .tag.pick.on { background: #1f6feb; border-color: #1f6feb; color: #fff; }
+    .grid { display: grid; grid-template-columns: 1.6fr 1fr; gap: 16px; align-items: start; }
+    .grid.even { grid-template-columns: 1fr 1fr; }
+    @media (max-width: 900px) { .grid, .grid.even { grid-template-columns: 1fr; } }
+    .jd {
+      white-space: pre-wrap; max-height: 460px; overflow: auto; font-size: 13px;
+      color: #c9d1d9; background: var(--panel-2); border: 1px solid var(--line);
+      border-radius: 8px; padding: 12px;
+    }
+    .bar { height: 7px; background: #21262d; border-radius: 4px; overflow: hidden; }
+    .bar > i { display: block; height: 100%; background: var(--accent); }
+    .kv { display: grid; grid-template-columns: 130px 1fr; gap: 6px 12px; font-size: 13px; }
+    .kv dt { color: var(--muted); }
+    .kv dd { margin: 0; }
+    .notice {
+      border-left: 3px solid var(--amber); background: #1e1a0e; padding: 9px 12px;
+      border-radius: 0 7px 7px 0; font-size: 13px; margin-bottom: 12px;
+    }
+    .notice.ok { border-color: var(--green); background: #0d1f14; }
+    .notice.bad { border-color: var(--red); background: #23120f; }
+    .notice.info { border-color: var(--accent); background: #0e1b2c; }
+    hr.sep { border: none; border-top: 1px solid var(--line); margin: 14px 0; }
+    .spin {
+      display: inline-block; width: 11px; height: 11px; border-radius: 50%;
+      border: 2px solid #2a4a75; border-top-color: var(--accent);
+      animation: spin .8s linear infinite; vertical-align: -1px; margin-right: 6px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+  <div class="wrap {% block wrapclass %}{% endblock %}">
+    {% block header %}
+    <header class="top">
+      <div class="brand">job-agent <span>{% block subtitle %}{% endblock %}</span></div>
+      <nav class="links">
+        <a href="/">Dashboard</a>
+        <a href="/jobs">Results</a>
+        <a href="/setup">Resume</a>
+        {% if email %}
+          <span class="who">{{ email }}</span>
+          <form method="post" action="/logout" style="display:inline">
+            <button type="submit" class="tiny">Log out</button>
+          </form>
+        {% endif %}
+      </nav>
+    </header>
+    {% endblock %}
+
+    {% if task and (task.busy or task.error) %}
+    <div id="taskbar" class="notice {{ 'bad' if task.error else 'info' }}"
+         data-key="{{ task.key or '' }}">
+      {% if task.running %}<span class="spin"></span>{% endif %}
+      <b>{{ task.detail or task.name }}</b>
+      {% if task.error %} — failed: {{ task.error }}
+      {% elif task.waiting %} — queued behind {{ task.ahead }} other search{{ "" if task.ahead == 1 else "es" }}.
+      {% else %} — searching for {{ task.elapsed_seconds }}s.
+      {% endif %}
+      {% if task.progress %}
+      <div class="tiny muted" style="margin-top:6px">{{ task.progress[-1] }}</div>
+      {% endif %}
+    </div>
+    {% endif %}
+
+    {% block content %}{% endblock %}
+  </div>
+
+  <script>
+    // A live search runs for tens of seconds, so the page follows its own task
+    // and reloads once to show what arrived. Polling is scoped to the task key
+    // so two tabs searching different roles do not read each other's progress.
+    (function () {
+      const bar = document.getElementById('taskbar');
+      if (!bar || bar.classList.contains('bad')) return;
+      const key = bar.dataset.key;
+      if (!key) return;
+      let failures = 0;
+      const timer = setInterval(async () => {
+        try {
+          const res = await fetch('/api/task?key=' + encodeURIComponent(key));
+          const state = await res.json();
+          failures = 0;
+          if (!state.busy) { clearInterval(timer); location.reload(); return; }
+          const latest = (state.progress && state.progress.length)
+            ? '<div class="tiny muted" style="margin-top:6px">' +
+              state.progress[state.progress.length - 1] + '</div>'
+            : '';
+          const head = state.waiting
+            ? '<b>' + (state.detail || state.name) + '</b> — queued behind ' +
+              state.ahead + ' other search' + (state.ahead === 1 ? '' : 'es') + '.'
+            : '<span class="spin"></span><b>' + (state.detail || state.name) +
+              '</b> — searching for ' + state.elapsed_seconds + 's.';
+          bar.innerHTML = head + latest;
+        } catch (err) {
+          // A cold-starting free instance drops a few polls; only give up if it
+          // keeps failing, otherwise the spinner would stick forever.
+          if (++failures > 8) clearInterval(timer);
+        }
+      }, 2500);
+    })();
+  </script>
+</body>
+</html>

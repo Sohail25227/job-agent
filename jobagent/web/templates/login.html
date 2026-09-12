@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block title %}Log in · job-agent{% endblock %}
+{% block wrapclass %}narrow{% endblock %}
+{% block header %}{% endblock %}
+
+{% block content %}
+<div class="brand" style="margin-bottom:18px">job-agent <span>every board, one list</span></div>
+
+{% if error %}<div class="notice bad">{{ error }}</div>{% endif %}
+
+<form class="panel" method="post" action="/login">
+  <h2>Log in</h2>
+  <label class="field" style="margin-bottom:10px">
+    Email
+    <input type="email" name="email" autocomplete="email" autofocus required/>
+  </label>
+  <label class="field" style="margin-bottom:14px">
+    Password
+    <input type="password" name="password" autocomplete="current-password" required/>
+  </label>
+  <button class="primary" type="submit" style="width:100%">Log in</button>
+</form>
+
+<p class="muted tiny">
+  New here? <a href="/register">Create an account</a>. Openings are searched live
+  across every board that publishes an API, and you apply on the employer's own
+  site — nothing is ever submitted for you.
+</p>
+{% endblock %}

@@ -1,0 +1,484 @@
+# ============================================================================
+# job-agent configuration
+# Everything here is safe to edit. Secrets belong in .env, not in this file.
+# ============================================================================
+
+search:
+  # Titles we actively want. Matching is fuzzy + keyword based, not exact.
+  titles:
+    - Backend Engineer
+    - Backend Developer
+    - Software Engineer Backend
+    - Java Developer
+    - Java Backend Engineer
+    - Software Development Engineer
+    - Software Engineer II
+    - Software Engineer
+    - Senior Software Engineer
+    - Microservices Developer
+    - Platform Engineer
+    - API Engineer
+
+  # A job must mention at least one of these to be considered backend-ish.
+  must_have_any:
+    - java
+    - spring
+    - spring boot
+    - microservices
+    - backend
+    - kafka
+    - api
+
+  # Hard rejects, checked against the job title.
+  exclude_title_keywords:
+    - intern
+    - frontend
+    - front-end
+    - react developer
+    - angular developer
+    - ios
+    - android
+    - qa
+    - test engineer
+    - sdet
+    - data entry
+    - sales
+    - support engineer
+    # Too senior for ~3 years of experience.
+    - staff
+    - principal
+    - distinguished
+    - fellow
+    - director
+    - vice president
+    - head of
+    - manager
+    - architect
+    # Adjacent disciplines that are not backend work.
+    - data scientist
+    - machine learning
+    - research scientist
+    - designer
+    - recruiter
+    - marketing
+    - technical writer
+    - solutions engineer
+    - security engineer
+    - site reliability
+    # Enterprise/legacy stacks that have nothing to do with your experience.
+    - sap
+    - salesforce
+    - servicenow
+    - peoplesoft
+    - mainframe
+    - cobol
+    - pega
+    - guidewire
+    - sharepoint
+    - drupal
+    - wordpress
+    - magento
+    - php
+    - .net
+    - dotnet
+
+  locations:
+    - Gurgaon
+    - Gurugram
+    - Noida
+    - Delhi
+    - New Delhi
+    - NCR
+    - Bengaluru
+    - Bangalore
+    - Hyderabad
+    - Pune
+    - India
+  remote_ok: true
+
+  # You have ~3 years, so target roles asking for roughly 2-6.
+  min_experience_years: 2
+  max_experience_years: 6
+  posted_within_days: 21
+
+  # Below this score a job is auto-skipped and never shown as actionable.
+  min_score: 55
+
+sources:
+  # ---- Public ATS APIs. No key, no scraping, no ToS problem. --------------
+  # Add any company here: the token is the slug in their careers URL.
+  # e.g. https://boards.greenhouse.io/anthropic -> board "anthropic"
+  # Every slug below was verified live by scripts/probe_boards.py.
+  greenhouse:
+    enabled: true
+    boards:
+      - phonepe
+      - stripe
+      - databricks
+      - mongodb
+      - gitlab
+      - cloudflare
+      - datadog
+      - twilio
+      - coinbase
+      - postman
+      - samsara
+      - flexport
+      - dropbox
+      - airbnb
+      - figma
+      - anthropic
+      - clickhouse
+
+  # e.g. https://jobs.lever.co/meesho -> board "meesho"
+  lever:
+    enabled: true
+    boards:
+      - meesho
+      - zeta
+      - epifi
+
+  # e.g. https://jobs.ashbyhq.com/openai -> board "openai"
+  ashby:
+    enabled: true
+    boards:
+      - notion
+      - confluent
+      - plaid
+      - ramp
+      - vanta
+      - clickhouse
+      - openai
+      - benchling
+
+  # e.g. https://jobs.smartrecruiters.com/Visa -> company "Visa"
+  # Slugs are case-sensitive and not always the company name: "Bosch" returns
+  # nothing, "BoschGroup" returns thousands. Every one below was verified live
+  # against /v1/companies/<slug>/postings, with its open count at the time.
+  smartrecruiters:
+    enabled: true
+    companies:
+      - BoschGroup    # 4788
+      - Grab          # 390
+      - Freshworks    # 164
+      - Swiggy        # 73
+      - Mindtickle    # 11
+      - Unacademy     # 3
+      - Bytedance     # 2
+      - Whatfix       # 1
+      - Netradyne     # 1
+
+  # Off because we have no slug with open postings, not because it is broken:
+  # the adapter is correct and the widget API answers 200 with the expected
+  # shape. Workable is mostly small companies, so the useful slug is whichever
+  # one you are actually watching. Find it in the careers page URL
+  # (https://apply.workable.com/COMPANY/) and check it returns jobs:
+  #   curl -s "https://apply.workable.com/api/v1/widget/accounts/COMPANY?details=true"
+  workable:
+    enabled: false
+    companies: []
+
+  # e.g. https://acme.recruitee.com/ -> company "acme". Recruitee only answers
+  # for a real tenant, so there is nothing to enable until you add one.
+  recruitee:
+    enabled: false
+    companies: []
+
+  # ---- Workday: where most large India employers actually post ------------
+  # Every tenant below was verified live. To add one, open the careers page:
+  #   https://TENANT.wdN.myworkdayjobs.com/en-US/SITE
+  # and copy tenant / host / site out of that URL. A 422 means the site name
+  # is wrong, 401 means the tenant requires a login.
+  workday:
+    enabled: true
+    queries:
+      - "java backend engineer"
+      - "backend software engineer"
+      - "software engineer java"
+    max_pages: 3
+    # Each JD body costs one extra request. Postings outside your target
+    # geography are dropped from the cheap list response first, so this budget
+    # is spent on roles you could actually take.
+    descriptions_per_tenant: 30
+    tenants:
+      - { tenant: nvidia, host: nvidia.wd5.myworkdayjobs.com, site: NVIDIAExternalCareerSite, label: NVIDIA }
+      - { tenant: salesforce, host: salesforce.wd12.myworkdayjobs.com, site: External_Career_Site, label: Salesforce }
+      - { tenant: adobe, host: adobe.wd5.myworkdayjobs.com, site: external_experienced, label: Adobe }
+      - { tenant: paypal, host: paypal.wd1.myworkdayjobs.com, site: jobs, label: PayPal }
+      - { tenant: mastercard, host: mastercard.wd1.myworkdayjobs.com, site: CorporateCareers, label: Mastercard }
+      - { tenant: autodesk, host: autodesk.wd1.myworkdayjobs.com, site: Ext, label: Autodesk }
+      - { tenant: micron, host: micron.wd1.myworkdayjobs.com, site: External, label: Micron }
+      - { tenant: kla, host: kla.wd1.myworkdayjobs.com, site: Search, label: KLA }
+      - { tenant: db, host: db.wd3.myworkdayjobs.com, site: DBWebsite, label: Deutsche Bank }
+      - { tenant: philips, host: philips.wd3.myworkdayjobs.com, site: jobs-and-careers, label: Philips }
+      - { tenant: target, host: target.wd5.myworkdayjobs.com, site: targetcareers, label: Target }
+      - { tenant: hp, host: hp.wd5.myworkdayjobs.com, site: ExternalCareerSite, label: HP }
+      - { tenant: workday, host: workday.wd5.myworkdayjobs.com, site: Workday, label: Workday }
+      - { tenant: thermofisher, host: thermofisher.wd5.myworkdayjobs.com, site: thermofishercareers, label: Thermo Fisher }
+
+  # ---- Keyed aggregators: the legitimate way to reach Naukri/Indeed data --
+  # Both index Indian job boards and both give away a free key in a minute.
+  # Adzuna:  https://developer.adzuna.com  -> ADZUNA_APP_ID + ADZUNA_APP_KEY
+  # Jooble:  https://jooble.org/api/about  -> JOOBLE_API_KEY
+  # They stay off until the keys are in .env; enabling without one just warns.
+  adzuna:
+    enabled: true
+    country: in
+    app_id_env: ADZUNA_APP_ID
+    api_key_env: ADZUNA_APP_KEY
+    results_per_page: 50
+    max_pages: 2
+    queries:
+      - { what: "java backend developer", where: "Pune" }
+      - { what: "java spring boot", where: "Gurgaon" }
+      - { what: "backend engineer", where: "Noida" }
+      - { what: "java microservices", where: "Bengaluru" }
+      - { what: "software engineer java", where: "Hyderabad" }
+      - { what: "java developer", where: "Delhi" }
+
+  jooble:
+    enabled: true
+    api_key_env: JOOBLE_API_KEY
+    max_pages: 2
+    queries:
+      - { keywords: "java backend developer", location: "Pune" }
+      - { keywords: "spring boot microservices", location: "Bengaluru" }
+      - { keywords: "java developer", location: "Gurgaon" }
+      - { keywords: "backend engineer", location: "Noida" }
+      - { keywords: "java developer", location: "Hyderabad" }
+
+  # ---- Keyless aggregators that ship the full job description ------------
+  # No signup, no key, and the whole JD arrives in the list response, so these
+  # are the cheapest way to get postings the scorer can actually judge.
+
+  # India-wide, honours the city filter strictly (an unknown city returns
+  # nothing), and understands a title keyword.
+  #
+  # Without an API key - and keys are sold, not given away - the budget is
+  # about ten requests an hour, a page holds twenty postings, and page two is
+  # refused. So max_pages stays at 1, the query list stays short, and the
+  # source is crawl-only (see CRAWL_ONLY in jobagent/search.py): a throttle
+  # lasts most of an hour and would take the scheduled crawl down with it.
+  jobdataapi:
+    enabled: true
+    max_pages: 1
+    queries:
+      - { title: "backend", location: "Gurugram" }
+      - { title: "java", location: "Gurugram" }
+      - { title: "software engineer", location: "Gurugram" }
+      - { title: "backend", location: "Noida" }
+      - { title: "java", location: "Delhi" }
+
+  # Takes no keyword, only a city, and IGNORES a city it does not recognise -
+  # answering with a default set instead of an error. Only labels verified
+  # against the live API belong here; see MUSE_CITIES in jobagent/search.py.
+  # "Gurgaon, India" is correct and "Gurugram, India" is silently ignored.
+  themuse:
+    enabled: true
+    max_pages: 2
+    filters:
+      - Software Engineering
+      - Data Science
+      - IT
+    queries:
+      - { location: "Gurgaon, India" }
+      - { location: "Noida, India" }
+      - { location: "New Delhi, India" }
+
+  # ---- Remote-first feeds: free, keyless, worldwide-remote roles ----------
+  # Most of these restrict hiring to the US or EU; the location filter drops
+  # those, so treat them as a bonus channel rather than the main one.
+  remotive:
+    enabled: true
+    queries:
+      - backend
+      - java
+
+  remoteok:
+    enabled: true
+
+  arbeitnow:
+    enabled: true
+    max_pages: 3
+
+  himalayas:
+    enabled: true
+    limit: 100
+    max_pages: 2
+
+  jobicy:
+    enabled: true
+    limit: 50
+    filters: [engineering, dev]
+
+  weworkremotely:
+    enabled: true
+    filters:
+      - remote-programming-jobs
+      - remote-back-end-programming-jobs
+
+  # ---- Discovery-only sources. READ THIS BEFORE ENABLING. ----------------
+  # LinkedIn and Naukri Terms of Service prohibit automated access. These
+  # adapters only READ public search results to discover openings; the agent
+  # never logs in and never auto-applies through them. Enabling is your call
+  # and your risk: rate limits are conservative, but endpoints are unofficial
+  # and may break or get your IP throttled. Default: off.
+  # Verified working and by far the richest source of India backend roles.
+  linkedin:
+    enabled: true
+    queries:
+      - keywords: "java backend developer"
+        location: "Pune, Maharashtra, India"
+      - keywords: "java spring boot developer"
+        location: "Pune, Maharashtra, India"
+      - keywords: "java backend developer"
+        location: "Gurugram, Haryana, India"
+      - keywords: "java spring boot developer"
+        location: "Gurugram, Haryana, India"
+      - keywords: "java backend engineer"
+        location: "Noida, Uttar Pradesh, India"
+      - keywords: "spring boot microservices"
+        location: "Noida, Uttar Pradesh, India"
+      - keywords: "backend engineer java"
+        location: "Bengaluru, Karnataka, India"
+      - keywords: "java microservices"
+        location: "Bengaluru, Karnataka, India"
+      - keywords: "spring boot microservices"
+        location: "Hyderabad, Telangana, India"
+      - keywords: "java backend developer"
+        location: "Hyderabad, Telangana, India"
+      - keywords: "software development engineer java"
+        location: "Delhi, India"
+      - keywords: "java backend developer"
+        location: "Chennai, Tamil Nadu, India"
+      - keywords: "java microservices kafka"
+        location: "India"
+      - keywords: "backend developer remote"
+        location: "India"
+    # 10 results per page, so this is 60 postings per query.
+    max_pages: 6
+    # Each job description is a separate request and dominates the run time.
+    # Raise this to lose fewer postings to "no job description could be read";
+    # lower it for a faster pass.
+    descriptions_per_query: 25
+
+  # Naukri's API is unreachable from a corporate network that blocks job
+  # boards (it fails instantly, before any request goes out). Try enabling it
+  # from home; if it still times out, leave it off and rely on LinkedIn.
+  naukri:
+    enabled: false
+    queries:
+      - keywords: "java backend developer"
+        location: "pune"
+      - keywords: "spring boot microservices"
+        location: "bengaluru"
+      - keywords: "java developer"
+        location: "gurgaon"
+    max_pages: 2
+
+matching:
+  weights:
+    skills: 55
+    title: 15
+    experience: 10
+    location: 12
+    recency: 8
+  # Skills you actually have, weighted by how strong you are. Used for scoring
+  # and to decide what a JD is "missing". Keep names canonical (see
+  # jobagent/matching/skills.py for the alias table).
+  # Weighted from Sohail_Ahmad_SDE_Resume.pdf: 1.0 = core, 0.5 = exposure.
+  my_skills:
+    java: 1.0
+    spring: 1.0
+    spring boot: 1.0
+    microservices: 1.0
+    rest api: 1.0
+    kafka: 0.95
+    event driven: 0.9
+    couchbase: 0.9
+    git: 0.9
+    telecom domain: 0.9
+    ci/cd: 0.85
+    jenkins: 0.85
+    junit: 0.85
+    elasticsearch: 0.8
+    docker: 0.8
+    maven: 0.8
+    mockito: 0.8
+    postman: 0.8
+    agile: 0.8
+    kubernetes: 0.75
+    sql: 0.75
+    design patterns: 0.7
+    system design: 0.7
+    distributed systems: 0.7
+    caching: 0.7
+    security: 0.7
+    hibernate: 0.6
+    postgresql: 0.6
+    react: 0.6
+    tdd: 0.6
+    ai/llm: 0.55
+    c++: 0.5
+
+resume:
+  base: config/resume_base.yaml
+  profile: config/profile.yaml
+  output_dir: data/resumes
+  formats: [md, docx, pdf]
+  cover_letter: true
+
+llm:
+  enabled: true
+  # Providers are tried top to bottom; the first reachable one is used.
+  # Delete the ones you don't want. If none work, the agent falls back to a
+  # deterministic rule-based tailor (still useful, just less fluent).
+  providers:
+    - name: ollama
+      model: qwen2.5:7b-instruct
+      base_url: http://localhost:11434/v1
+      api_key_env: null
+    - name: gemini
+      model: gemini-2.0-flash
+      base_url: https://generativelanguage.googleapis.com/v1beta/openai/
+      api_key_env: GEMINI_API_KEY
+    # Verified available on this Groq key (check with GET /openai/v1/models
+    # if you ever get a model_not_found error - Groq retires models often).
+    - name: groq
+      model: openai/gpt-oss-120b
+      base_url: https://api.groq.com/openai/v1
+      api_key_env: GROQ_API_KEY
+    - name: openai
+      model: gpt-4o-mini
+      base_url: null
+      api_key_env: OPENAI_API_KEY
+  temperature: 0.2
+  max_tokens: 4000
+  timeout_seconds: 120
+
+web:
+  host: 127.0.0.1
+  port: 8000
+  session_hours: 72
+  upload_dir: data/uploads
+  page_size: 40
+
+schedule:
+  # Daily run. Standard 5-field cron.
+  cron: "30 9 * * *"
+  timezone: Asia/Kolkata
+
+storage:
+  database_url: sqlite:///data/jobs.db
+
+http:
+  user_agent: "job-agent/1.0 (personal job search; +https://github.com/)"
+  timeout_seconds: 30
+  max_retries: 3
+  # Politeness delay between requests to the same host.
+  min_delay_seconds: 1.5
+  # Office networks re-sign HTTPS with an internal root CA. This verifies
+  # against the macOS keychain (which trusts it) instead of certifi.
+  use_system_certs: true
+  # Optional extra PEM, if you ever need one on a different network.
+  ca_bundle: null
