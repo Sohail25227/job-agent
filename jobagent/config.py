@@ -34,6 +34,10 @@ class SearchConfig(BaseModel):
     max_experience_years: int = 15
     posted_within_days: int = 21
     min_score: int = 55
+    # Positive bonus for explicit visa/work-permit/relocation language. It is
+    # intentionally a priority, not a hard requirement: many employers omit
+    # sponsorship details from the first version of a posting.
+    visa_sponsorship_bonus: float = 8
 
 
 class BoardSource(BaseModel):

@@ -27,8 +27,7 @@ MAX_CITY_QUERIES = 24
 
 REMOTE_LABEL = "Remote"
 
-# City -> the string LinkedIn's geo autocomplete expects. Anything not listed
-# still works; it just gets " , India" appended.
+# City -> the string LinkedIn's geo autocomplete expects.
 INDIA_CITIES: dict[str, str] = {
     "Bengaluru": "Bengaluru, Karnataka, India",
     "Hyderabad": "Hyderabad, Telangana, India",
@@ -47,6 +46,36 @@ INDIA_CITIES: dict[str, str] = {
     "Coimbatore": "Coimbatore, Tamil Nadu, India",
     "Bhubaneswar": "Bhubaneswar, Odisha, India",
     "India (anywhere)": "India",
+}
+
+# International markets with meaningful software hiring and a practical
+# relocation/visa path for an India-based engineer. These are also used to
+# select the country code for country-aware aggregators such as Adzuna.
+INTERNATIONAL_CITIES: dict[str, str] = {
+    "Dubai": "Dubai, United Arab Emirates",
+    "Abu Dhabi": "Abu Dhabi, United Arab Emirates",
+    "London": "London, United Kingdom",
+    "Manchester": "Manchester, United Kingdom",
+    "Dublin": "Dublin, Ireland",
+    "Berlin": "Berlin, Germany",
+    "Munich": "Munich, Germany",
+    "Amsterdam": "Amsterdam, Netherlands",
+    "Toronto": "Toronto, Canada",
+    "Vancouver": "Vancouver, Canada",
+    "Singapore": "Singapore",
+    "Sydney": "Sydney, Australia",
+    "Melbourne": "Melbourne, Australia",
+}
+
+INTERNATIONAL_COUNTRIES: dict[str, str] = {
+    "Dubai": "ae", "Abu Dhabi": "ae",
+    "London": "gb", "Manchester": "gb",
+    "Dublin": "ie",
+    "Berlin": "de", "Munich": "de",
+    "Amsterdam": "nl",
+    "Toronto": "ca", "Vancouver": "ca",
+    "Singapore": "sg",
+    "Sydney": "au", "Melbourne": "au",
 }
 
 # The Muse answers an unrecognised location with a default set rather than an
@@ -97,7 +126,12 @@ def linkedin_location(city: str) -> str:
     city = canonical_city(city)
     if city.lower() in {"remote", "anywhere"}:
         return "India"
-    return INDIA_CITIES.get(city) or (city if city.endswith("India") else f"{city}, India")
+    return INDIA_CITIES.get(city) or INTERNATIONAL_CITIES.get(city) or city
+
+
+def adzuna_country(city: str) -> str:
+    """Return the two-letter Adzuna market for a selected city."""
+    return INTERNATIONAL_COUNTRIES.get(city, "in")
 
 
 def muse_location(city: str) -> str | None:
@@ -222,7 +256,11 @@ def build_search_config(base: Config, search: Search,
         {"keywords": keyword, "location": linkedin_location(city)} for keyword, city in pairs
     ]
     config.sources.adzuna.queries = [
-        {"what": keyword, "where": "" if city.startswith("India") else city}
+        {
+            "what": keyword,
+            "where": "" if city.startswith("India") else city,
+            "country": adzuna_country(city),
+        }
         for keyword, city in pairs
     ]
     config.sources.jooble.queries = [
@@ -232,7 +270,11 @@ def build_search_config(base: Config, search: Search,
     # JobDataAPI returns nothing for a city it does not know, so its own
     # canonical spelling can go straight through without a lookup table.
     config.sources.jobdataapi.queries = [
-        {"title": keyword, "location": "" if city.startswith("India") else city}
+        {
+            "title": keyword,
+            "location": "" if city.startswith("India") else city,
+            "country": adzuna_country(city).upper(),
+        }
         for keyword, city in pairs
     ]
     # The Muse takes no keyword at all, so it is addressed by city alone and

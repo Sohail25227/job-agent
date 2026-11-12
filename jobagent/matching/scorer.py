@@ -27,6 +27,14 @@ SOFTWARE_TOKEN = re.compile(
     re.I,
 )
 
+VISA_SPONSORSHIP = re.compile(
+    r"\b(?:visa sponsorship|sponsor(?:s|ed|ing)?\s+(?:a\s+)?work\s+visa|"
+    r"work permit sponsorship|skilled worker visa|relocation support|"
+    r"relocation package|relocate(?:d|s)?\s+(?:to|in)|immigration support|"
+    r"employer sponsored)\b",
+    re.I,
+)
+
 
 @dataclass(slots=True)
 class ScoreResult:
@@ -113,6 +121,11 @@ def _recency_component(config: Config, posted_at: datetime | None) -> float:
     return max(0.0, 1.0 - (age_days - 3) / (horizon - 3))
 
 
+def _visa_component(title: str, description: str | None) -> float:
+    """Return a bonus signal only when sponsorship is explicitly mentioned."""
+    return 1.0 if VISA_SPONSORSHIP.search(f"{title}\n{description or ''}") else 0.0
+
+
 def score_job(config: Config, job) -> ScoreResult:
     """Score a job. ``job`` needs title/location/remote/description/posted_at."""
     reason = hard_filter_reason(config, job)
@@ -126,6 +139,7 @@ def score_job(config: Config, job) -> ScoreResult:
     experience_ratio, required = _experience_component(config, job.title or "", job.description)
     location_ratio = _location_component(config, job.location, bool(job.remote))
     recency_ratio = _recency_component(config, job.posted_at)
+    visa_ratio = _visa_component(job.title or "", job.description)
 
     detail = {
         "skills": round(weights.skills * skills_ratio, 2),
@@ -133,8 +147,9 @@ def score_job(config: Config, job) -> ScoreResult:
         "experience": round(weights.experience * experience_ratio, 2),
         "location": round(weights.location * location_ratio, 2),
         "recency": round(weights.recency * recency_ratio, 2),
+        "sponsorship": round(config.search.visa_sponsorship_bonus * visa_ratio, 2),
     }
-    total = round(sum(detail.values()), 2)
+    total = round(min(100.0, sum(detail.values())), 2)
 
     return ScoreResult(
         total=0.0 if reason else total,

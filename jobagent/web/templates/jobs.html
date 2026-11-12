@@ -138,6 +138,9 @@
             {% for skill in entry.result.missing_skills[:2] %}
             <span class="tag miss">{{ skill }}</span>
             {% endfor %}
+            {% if entry.result.detail.get('sponsorship', 0) > 0 %}
+            <span class="tag" style="color:var(--green)">visa/relocation signal</span>
+            {% endif %}
           </div>
         </td>
         <td>

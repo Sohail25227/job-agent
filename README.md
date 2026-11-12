@@ -80,7 +80,12 @@ whose free tier does not expire.
 Push this repository to GitHub, then in Render: **New → Blueprint**, pick the
 repo. `render.yaml` describes the service, so the only thing to fill in is
 `DATABASE_URL`. Optionally add `ADZUNA_APP_ID`, `ADZUNA_APP_KEY` and
-`JOOBLE_API_KEY` (both free, about a minute each) for wider India coverage.
+`JOOBLE_API_KEY` (both free, about a minute each) for wider India and
+international coverage. The location picker also includes Dubai, London,
+Dublin, Berlin, Amsterdam, Toronto, Singapore, Sydney and other major markets.
+Jobs that explicitly mention visa sponsorship, work-permit support or
+relocation receive a small priority bonus; sponsorship is never treated as a
+guarantee.
 
 `SECRET_KEY` is generated for you and must then be left alone — changing it logs
 every user out.

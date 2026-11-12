@@ -59,9 +59,10 @@ class AdzunaSource(Source):
         for query in settings.queries:
             what = query.get("what") or query.get("keywords") or ""
             where = query.get("where") or ""
+            country = query.get("country") or settings.country
             for page in range(1, max(1, settings.max_pages) + 1):
                 url = self.LIST_URL.format(
-                    country=settings.country,
+                    country=country,
                     page=page,
                     app_id=settings.app_id,
                     app_key=settings.api_key,
@@ -276,9 +277,10 @@ class JobDataApiSource(Source):
         for query in queries:
             title = query.get("title") or ""
             location = query.get("location") or ""
+            country = query.get("country") or self.COUNTRY
             for page in range(1, max(1, settings.max_pages) + 1):
                 url = self.LIST_URL.format(
-                    country=self.COUNTRY, max_days=max_days, page=page
+                    country=country, max_days=max_days, page=page
                 )
                 if title:
                     url += f"&title={quote_plus(title)}"

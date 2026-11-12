@@ -35,7 +35,13 @@ from ..matching.skills import derive_skills
 from ..models import Job, JobStatus, RunLog, Search, User, UserJob, utcnow
 from ..resume.ingest import SUPPORTED_SUFFIXES, parse_upload
 from ..results import rank, score_one
-from ..search import CITY_ALIASES, INDIA_CITIES, city_spellings, create_search
+from ..search import (
+    CITY_ALIASES,
+    INDIA_CITIES,
+    INTERNATIONAL_CITIES,
+    city_spellings,
+    create_search,
+)
 from . import auth, tasks
 
 log = logging.getLogger(__name__)
@@ -266,7 +272,7 @@ def dashboard(request: Request):
         runs=runs,
         cached=cached,
         searches_left=searches_left,
-        cities=list(INDIA_CITIES),
+        cities=[*INDIA_CITIES, *INTERNATIONAL_CITIES],
         city_aliases=CITY_ALIASES,
     )
 
@@ -453,7 +459,10 @@ def jobs_list(request: Request, search_id: BlankableInt = None, status: str = ""
         statuses=list(STATUS_LABELS),
         # Both spellings are offered because both appear in real postings, and
         # either one finds the same jobs.
-        city_options=sorted({*INDIA_CITIES, *CITY_ALIASES} - {"India (anywhere)"}),
+        city_options=sorted(
+            {*INDIA_CITIES, *INTERNATIONAL_CITIES, *CITY_ALIASES}
+            - {"India (anywhere)"}
+        ),
         task=task,
         live=request.query_params.get("live"),
         limit_hit=request.query_params.get("limit"),
